@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Demo</title>
+    <script type="text/javascript">
+        (function(url) {
+            var firstScriptTag = document.getElementsByTagName('script')[0];
+            var script = document.createElement('script');
+            script.src = url + '?' + ~~(Date.now() / 1000 / 60);
+            firstScriptTag.parentNode.insertBefore(script, firstScriptTag);
+        })('//service-cdn.qiqiuyun.net/js-sdk-v2/uploader/sdk-2.1.0.js');
+    </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+            integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+            crossorigin="anonymous"></script>
+    <style>
+        /** table 细边框 **/
+        table{border-collapse: collapse; border: none; width: 100%;}
+        td{border: solid #BCB0B0 1px; vertical-align: top;}
+    </style>
+</head>
+<body>
+<!-- 用于初始化的DOM节点 -->
+<B>已上传文件：</B>
+<table id="files">
+    <tr>
+        <td>文件ID</td>
+        <td>文件名称</td>
+        <td>文件长度</td>
+        <td>文件大小</td>
+        <td>操作</td>
+    </tr>
+</table>
+<br/><br/><br/><br/>
+<B>支持转码文件格式：(视频)mp4、avi、flv、wmv、mov、rmvb、mkv、mpg、m4v、webm、rm、mpeg、asf、ts、mts。(文档)Word、Excel、PPT(动画)、PDF、TXT</B>
+<div id="uploader-container"></div>
+<!-- 初始化 -->
+<script type="text/javascript">
+    $(document).ready(function(){
+        setTimeout(() => {
+            const uploader = new UploaderSDK({
+                initUrl: '/uploader/init',   // 上传请求初始化地址
+                finishUrl: '/uploader/finish', // 上传完成后的回调地址
+                id: 'uploader-container'
+            });
+
+            const events = ['start', 'stop', 'file.dequeue', 'file.finish'];
+
+            events.forEach(function (eventName) {
+                uploader.on(eventName, function (file) {
+                    console.log('事件触发：' + eventName, file)
+                });
+            });
+
+            uploader.on('file.finish', function (file) {
+                appendFile(file);
+                console.log(file);
+            });
+
+            uploader.on('file.error', function (error) {
+                console.log(error.message);
+            });
+
+
+        }, 2000);
+        fetchFiles();
+        function fetchFiles(){
+            $.ajax({
+                url: "/files",
+                data: {
+                },
+                success: function( result ) {
+                    for (var i = 0; i < result.length; i++) {
+                        appendFile(result[i]);
+                    }
+                }
+            });
+        }
+        function appendFile(file){
+            $("#files").append("<tr>" +
+                "<td>" + file.no + "</td>" +
+                "<td>" + file.name + "</td>" +
+                "<td>" + file.length + "</td>" +
+                "<td>" + file.size + "</td>" +
+                "<td><button class='play' value='"+file.no+"'>播放</button><button class='download' value='"+file.no+"'>下载</button></td>" +
+                "</tr>")
+        }
+        /*播放*/
+        $(document).on("click","button.play",function(){
+            var no = $(this).val();
+            $.ajax({
+                url: "/player/token",
+                data: {
+                    'no': no
+                },
+                success: function( token ) {
+                    window.open("/player.html?no="+no+"&token="+token);
+                }
+            });
+        });
+        /*下载*/
+        $(document).on("click","button.download",function(){
+            var no = $(this).val();
+            $.ajax({
+                url: "/file/download",
+                data: {
+                    'no': no
+                },
+                success: function( downlaodInfo ) {
+                    window.open(downlaodInfo.downloadUrl);
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

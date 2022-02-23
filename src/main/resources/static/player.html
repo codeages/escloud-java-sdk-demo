@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>气球云资源播放 Demo</title>
+    <script type="text/javascript">
+        (function (url) {
+            window.QiQiuYun || (window.QiQiuYun = {});
+            var firstScriptTag = document.getElementsByTagName('script')[0];
+            var script = document.createElement('script');
+            // url 中加入了 时间戳参数是为了确保能获取最新的SDK
+            script.src = url + '?' + ~~(Date.now() / 1000 / 60);
+            firstScriptTag.parentNode.insertBefore(script, firstScriptTag);
+        })('//service-cdn.qiqiuyun.net/js-sdk-v2/sdk-v1.js');
+    </script>
+</head>
+<body>
+<!-- 用于初始化的DOM节点 -->
+<div id="cloud-player" style="height: 800px"></div>
+<script type="text/javascript">
+    // 由于是异步载入script需要注册回调函数
+    QiQiuYun.onPlayerSDKReady = function (SDK) {
+        var no = getQueryString("no");
+        var token = getQueryString("token");
+        var player = new QiQiuYun.Player({
+            id: 'cloud-player',  // 用于初始化的DOM节点ID
+            resNo: no, // 播放资源编号
+            token: token // 播放令牌由后端SDK生成
+        });
+    }
+
+    function getQueryString(name) {
+        var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
+        var r = window.location.search.substr(1).match(reg);
+        if (r != null) {
+            return unescape(r[2]);
+        }
+        return null;
+    }
+</script>
+</body>
+</html>
